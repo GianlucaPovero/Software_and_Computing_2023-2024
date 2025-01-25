@@ -23,32 +23,42 @@ using namespace RooFit;
 
 void scnsp(){
 
-    time_t time1 = clock()/CLOCKS_PER_SEC;	
+    //time_t time1 = clock()/CLOCKS_PER_SEC;	
     //gROOT->ProcessLine(".x lhcbStyle.C");
 
     // Observables
+    // Here we define the observable we are going to study with the code. In this case the observable is the mass of the D^0 + pion 
+    // x1 and x2 are the two extremes of the energy interval we are looking in the analysis
     Double_t x1 = 2004.41, x2 = 2020.0;
     RooRealVar m_D0pi("m_D0pi", "m_D0pi", x1, x2, "Mev/c^2");
+    //the bin are set as 520 so that each bin has an excact length of 0.03 MeV/c^2
     m_D0pi.setBins(520);
 
+    // This line is used to define an object that we will use as a tagging variable, since the porpouse of the code is to do a simultaneous fit of both D^++ and D^*- 
+    // this RooCategory object is what separate a ' + ' event from a ' - ' event 
     RooCategory * q = new RooCategory("q", "q");
     q->defineType("Dsp", 1);
     q->defineType("Dsm", -1);
 
+    // this line defines a set in which we will input our observalbes and parameters later
     RooArgSet * obs = new RooArgSet();
     obs->add(m_D0pi);
     obs->add(*q);
 
+    // This line defines two observables taht are equal for both mass distributions 
     RooRealVar rho("rho", "rho esponente di f1", 0.05, -5, 5);
-    RooRealVar m0("m0", "m0", 2003, 2004.4, "MeV/c^2");
+    RooRealVar m0("m0", "m0", 2004.4, "MeV/c^2"); // threshold parameter, set as the mass energy of D^0+pi
 
     // Histograms
-    TFile * file = new TFile("histogramma.root");
+    // This lines opens a the file.root in which there are the histogram of events used for the data. At first the file is opened then the histograms are extracted and used to 
+    // create the TH1D object. At last, the RooDataHist object is created using both TH1D and the tagging object q, preaviously defined
+    TFile * file = new TFile("..path..");
     TH1D * h_dm_plus = (TH1D*)file->Get("h_dm_plus");
     TH1D * h_dm_minus = (TH1D*)file->Get("h_dm_minus");
     RooDataHist * hist = new RooDataHist("hist", "hist", m_D0pi, Index(*q), Import("Dsp", *h_dm_plus), Import("Dsm",*h_dm_minus));
 
     //blinding
+    // this string is used for "blinding", which means that the parameter of interest is modified in order not to have a bias while coding
     TString blindString = "SCNSP";
     /*
     if(file.contains("2017") || file.contains("2018") || file.contains("2017_2018")){
@@ -56,14 +66,17 @@ void scnsp(){
         if(file.contains("pipi")) blindString = "newDeltaACPRun3pipi";
     }
     */
-    
 
+    // this line defines our parameter of interest and then defines a RooUnblindUniform object which blinds the parameter with an offset. this will only modify the value
+    // of the parameter, not ist error
     RooRealVar * A_CP = new RooRealVar("A_CP", "A_CP", -0.01, -1, 1);
     RooUnblindUniform * A_CP_blind = new RooUnblindUniform("A_CP_blind", "A_CP_blind", blindString, 0.5, *A_CP);
 
     RooRealVar * A_CP_bkg = new RooRealVar("A_CP_bkg", "A_CP_bkg", -0.01, -1, 1);
 
 
+    // The following lines of code defines the functions used in the model, 3 Johnson functions and 1 Gaussian function. Note that theese definitions are made both for 
+    // D^*+ distribution and D^*- distributions
     // Model : 3 Johnson functions D*+
     RooRealVar mu1p("mu1p", "mu1p", 2010.0, 2009, 2011);
     RooRealVar sigj1p("sigj1p", "sigj1p", 0.8, 0, 1);
@@ -91,9 +104,11 @@ void scnsp(){
     RooAbsPdf * gausp = new RooGenericPdf("gausp", "1/(@2*TMath::Sqrt(2*TMath::Pi()))*TMath::Exp(-0.5*((@0-@1)/@2)*((@0-@1)/@2))",
                         RooArgSet(m_D0pi, mug_p, sg_p));
 
-    RooRealVar frac1p("frac1p", "relative fraction1 between Johnson functions", 0.4, 0.01, 1);
-    RooRealVar frac2p("frac2p", "relative fraction2 between Johnson functions", 0.4, 0.01, 1);
-    RooRealVar frac3p("frac3p", "frac3p", 0.4, 0.01, 1); // added beacuse of the gaussian function 
+    // the RooAddPdf used is made so that it does a recursive addition, meaning that the fraction defined here are not the true fraction in the model. Later ther will be a 
+    // par of the code dedicated to the output of the true fractions
+    RooRealVar frac1p("frac1p", "frac1p", 0.4, 0.01, 0.9);
+    RooRealVar frac2p("frac2p", "frac2p", 0.4, 0.01, 0.9);
+    RooRealVar frac3p("frac3p", "frac3p", 0.4, 0.01, 0.9); 
     RooAddPdf jjp("jjp", "jjp", RooArgList(*j1p, *j2p, *j3p, *gausp), RooArgList(frac1p, frac2p, frac3p), true);
 
     // Model : 3 Johnson functions D*-
@@ -123,13 +138,11 @@ void scnsp(){
     RooAbsPdf * gausm = new RooGenericPdf("gausm", "1/(@2*TMath::Sqrt(2*TMath::Pi()))*TMath::Exp(-0.5*((@0-@1)/@2)*((@0-@1)/@2))",
                         RooArgSet(m_D0pi, mug_m, sg_m));
 
-    RooRealVar frac1m("frac1m", "relative fraction1 between Johnson functions", 0.4, 0.01, 1);
-    RooRealVar frac2m("frac2m", "relative fraction2 between Johnson functions", 0.4, 0.01, 1);
-    RooRealVar frac3m("frac3m", "frac3m", 0.4, 0.01, 1);
+    RooRealVar frac1m("frac1m", "frac1m", 0.4, 0.01, 0.9);
+    RooRealVar frac2m("frac2m", "frac2m", 0.4, 0.01, 0.9);
+    RooRealVar frac3m("frac3m", "frac3m", 0.4, 0.01, 0.9);
     RooAddPdf jjm("jjm", "jjm", RooArgList(*j1m, *j2m, *j3m, *gausm), RooArgList(frac1m, frac2m, frac3m), true);
-
-    // Gaussian functions
-     
+    
 
     // Tagging function 
     RooGenericPdf * tag_Dsp = new RooGenericPdf("tag_Dsp", "tag_Dsp", "@0==1", RooArgSet(*q));
