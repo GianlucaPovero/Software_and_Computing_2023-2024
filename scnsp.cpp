@@ -34,7 +34,7 @@ void scnsp(){
     //the bin are set as 520 so that each bin has an excact length of 0.03 MeV/c^2
     m_D0pi.setBins(520);
 
-    // This line is used to define an object that we will use as a tagging variable, since the porpouse of the code is to do a simultaneous fit of both D^++ and D^*- 
+    // This line is used to define an object that we will use as a tagging variable, since the porpouse of the code is to do a simultaneous fit of both D^*+ and D^*- 
     // this RooCategory object is what separate a ' + ' event from a ' - ' event 
     RooCategory * q = new RooCategory("q", "q");
     q->defineType("Dsp", 1);
@@ -145,26 +145,26 @@ void scnsp(){
     
 
     // Tagging function 
+    // theese lines define the tagging functions using the tagging variable "q". 
     RooGenericPdf * tag_Dsp = new RooGenericPdf("tag_Dsp", "tag_Dsp", "@0==1", RooArgSet(*q));
     RooGenericPdf * tag_Dsm = new RooGenericPdf("tag_Dsm", "tag_Dsm", "@0==-1", RooArgSet(*q));
 
     // Pdf for D*+ and D*-
+    // one defined the tagging functions, the two signal functions for plus and minus events are defined by multipying each tag function with each model pdf.
     RooProdPdf * pdf_Dsp = new RooProdPdf("pdf_Dsp", "pdf_Dsp", RooArgSet(*tag_Dsp, jjp));
-    RooProdPdf * pdf_Dsm = new RooProdPdf("pdf_Dsm", "pdf_Dsm", RooArgSet(*tag_Dsm, jjm)); // NB
+    RooProdPdf * pdf_Dsm = new RooProdPdf("pdf_Dsm", "pdf_Dsm", RooArgSet(*tag_Dsm, jjm));
 
-    // A_CP fraction 
-    /*
-    RooFormulaVar * f_Dsp;
-    RooFormulaVar * f_Dsm;
-    */
-
+    // A_CP fraction
+    // in order to define the whole signal model, plus and minus events must be added together but with the particular fraction defined in theese lines
     RooFormulaVar * f_Dsp = new RooFormulaVar("f_Dsp", "f_Dsp", "0.5*(1+@0)", RooArgSet(*A_CP_blind));
     RooFormulaVar * f_Dsm = new RooFormulaVar("f_Dsm", "f_Dsm", "0.5*(1-@0)", RooArgSet(*A_CP_blind));
 
     // Signal PDF
+    // the final signal pdf is the summ of both plus and minus events 
     RooAddPdf * pdf_sig = new RooAddPdf("pdf_sig", "pdf_sig", RooArgSet(*pdf_Dsp, *pdf_Dsm), RooArgSet(*f_Dsp, *f_Dsm));
 
-    // Background : (x-x0)^b + (x-x0)^c 
+    // Background : (x-x0)^(1/2) + a*(x-x0)^(3/2) + c*(x-x0)^(5/2) 
+    // the following lines defines the background model fot both D^*+ and D^*- events
     /*
     RooRealVar bp("bp", "bp", 0.55,0,1);
     RooRealVar cp("cp", "cp", 0.02, -0.1, 0.1);
@@ -188,64 +188,85 @@ void scnsp(){
     RooGenericPdf * bkgtagpdf = new RooGenericPdf("bkgtagpdf", "bkgtagpdf", "1+@0*@1/abs(@1)", RooArgSet(*A_CP_bkg, *q));
     RooProdPdf * pdf_bkg = new RooProdPdf("pdf_bkg", "pdf_bkg", RooArgSet(*bkgtagpdf, *bkg_Dsp));
     */
-
+    // as for the signal events, the tagging function is defined also for the background 
     RooGenericPdf * tag_bkg_Dsp = new RooGenericPdf("tag_bkg_Dsp", "tag_bkg_Dsp", "@0==1", RooArgSet(*q));
     RooGenericPdf * tag_bkg_Dsm = new RooGenericPdf("tag_bkg_Dsm", "tag_bkg_Dsm", "@0==-1", RooArgSet(*q));
 
+    // theese lines define the pdf for the background plus and minus events
     RooProdPdf * pdf_bkg_Dsp = new RooProdPdf("pdf_bkg_Dsp", "pdf_bkg_Dsp", RooArgList(*tag_bkg_Dsp, *bkg_Dsp));
     RooProdPdf * pdf_bkg_Dsm = new RooProdPdf("pdf_bkg_Dsm", "pdf_bkg_Dsm", RooArgList(*tag_bkg_Dsm, *bkg_Dsm));
 
+    // here the fraction for plus and minus events is defined
     RooFormulaVar * f_bkg_Dsp = new RooFormulaVar("f_bkg_Dsp", "f_bkg_Dsp", "0.5*(1+@0)", RooArgSet(*A_CP_bkg));
     RooFormulaVar * f_bkg_Dsm = new RooFormulaVar("f_bkg_Dsm", "f_bkg_Dsm", "0.5*(1-@0)", RooArgSet(*A_CP_bkg));
 
+    // this line defines the final background functon 
     RooAddPdf * pdf_bkg = new RooAddPdf("pdf_bkg", "pdf_bkg", RooArgList(*pdf_bkg_Dsp, *pdf_bkg_Dsm), RooArgList(*f_bkg_Dsp, *f_bkg_Dsm));
 
     // Total model 
-    RooRealVar * Nsig = new RooRealVar("Nsig", "Nsig", 1e5, 0, 1e9);
-    RooRealVar * Nbkg = new RooRealVar("Nbkg", "Nbkg", 1e5, 0, 1e9);
-
+    // onec the signal and the background pdf are written, the total model in defined as the sum of them with the expected number of events used as fractions.
+    // in theese lines the number of events is defined with an interval between 0 and 1e9 since we expect Nsig of the order of 1e6
+    RooRealVar * Nsig = new RooRealVar("Nsig", "Nsig", 1e6, 0, 1e9);
+    RooRealVar * Nbkg = new RooRealVar("Nbkg", "Nbkg", 1e6, 0, 1e9);
+    
     RooAddPdf * pdf_tot = new RooAddPdf("pdf_tot", "pdf_tot", RooArgSet(*pdf_sig, *pdf_bkg), RooArgSet(*Nsig, *Nbkg));
 
 
-    // Fit
-    RooArgSet * params = pdf_tot->getParameters(*obs);
-    //params->readFromFile("run3_param.txt");
-    //params->readFromFile("pisa_param/pisa_test_mu.txt");
-    //params->readFromFile("DACP_Run3_params/test_1.txt");
+    // ------ Fit ------
 
+    // this lines calls 
+    // this line calls for the creation of a set which contains the parameters of the total pdf
+    RooArgSet * params = pdf_tot->getParameters(*obs);
+
+    // This line tells our fit to read the values of its parameters from a specific file.txt
+    // Useful when one has to run the program multiple times 
+    //params->readFromFile("..path/to/file.txt..");
+
+    // in theese following lines the RooChi2Var object is crated giving the total pdf and the histogram of data
     bool extended = true;
-    //RooAbsTestStatistics::Configuration cfg;
-    //cfg.nCPU(16);
     RooChi2Var * chi2 = new RooChi2Var("chi2", "chi2", *pdf_tot, *hist, extended, RooAbsData::SumW2);
+
+    // this lines construct the MINUIT interface on the RooChi2Var object
     RooMinimizer m1(*chi2);
+    //this line gives instruction to the program to print each computation on the logbook, this will result in a very rich logbook (and also very long)
     m1.setVerbose(kTRUE);
+    // theese lines apply the minimum gradient method, computing the asteroid vaues of the parameters, and the hessian matrix method, computing the parameters errors, upon 
+    // the RooMinimizer object
     m1.migrad();
     m1.migrad();
     m1.hesse();
 
+    // theese lines defines an object RooFitResult extracted from the RooMinimizer and then print it. The "v" options tells the program to print also 
+    // the error matrix and the correlation
     RooFit::OwningPtr<RooFitResult> result = m1.save();
     result->Print("v");
 
-
+    // in theese lines a matrix object is defined and is filled with the correlation matrix given by the fit, it is thes printed 
     const TMatrixDSym &cor = result->correlationMatrix();
     cout << "Correlation Matrix: " << endl;
     cor.Print();
 
-    //params->writeToFile("pisa_param/DACP_params.txt");
-    params->writeToFile("/Users/gianlucapovero/Documents/Prove_Codeing/SCNSP/test1.txt");    
+    // this line tells the code to print the RooùargSet containing the fit parameter on a file.txt
+    params->writeToFile("..path/to/file.txt..");    
     //correlation matrix 
-    gStyle->SetOptStat(0);
+    //gStyle->SetOptStat(0);
+    // this line create a 2 dimentsion histogram which is then filled with the correlation matrix of the fit exprted from the result
     TH2* hcorr = result->correlationHist();
 
-    Int_t nbin = h_dm_plus->GetNbinsX() + h_dm_minus->GetNbinsX(); // dovrebbe esere (N1 + N2)/2?
+    // the following lines are used to compute the nuber of degree of freedom
+    Int_t nbin = h_dm_plus->GetNbinsX() + h_dm_minus->GetNbinsX();
     Int_t npar;
     RooArgSet * paramSet = pdf_tot->getParameters(*obs);
     RooArgList paramList(*paramSet);
+    // this line select the argument that respect a certain condition from an existing list of arguments
     RooArgList * _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant", kFALSE);
     npar = _floatParamList->getSize();
+    // this line will be used later
     double chi2_plot=0;
     int ndof = nbin - npar;
 
+    // the following lines print in output the means parameters with a specific precision and theis errors, useful beacus the result printed 
+    // from the fit in line 250 don't have  high enough precision 
     cout << "mu1p: " << setprecision(10) << mu1p << "+-" << mu1p.getError() << endl;
     cout << "mu1m: " << setprecision(10) << mu1m << "+-" << mu1m.getError() << endl;
     cout << "mu2p: " << setprecision(10) << mu2p << "+-" << mu2p.getError() << endl;
@@ -254,6 +275,7 @@ void scnsp(){
     cout << "mu3m: " << setprecision(10) << mu3m << "+-" << mu3m.getError() << endl;
     cout << "mug_p: " << setprecision(10) << mug_p << "+-" << mug_p.getError() << endl;
     cout << "mug_m: " << setprecision(10) << mug_m << "+-" << mug_m.getError() << endl;
+
     
     auto mu_arr = RooArgList(mu1m, mu1p, mu2m, mu2p, mu3m, mu3p, mug_m, mug_p);
     const char* mu_a[8] = {"mu1m", "mu1p", "mu2m", "mu2p", "mu3m", "mu3p", "mug_m", "mug_p"};
