@@ -13,18 +13,13 @@
 #include "TH1D.h"
 #include "TRandom.h"
 #include <RooUnblindUniform.h>
-//#include "RooMinuit.h"
-//#include "Roo2JBW.h"
+#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "RooChi2Var.h"
-#include <time.h>
 
 using namespace RooFit;
 
 void scnsp(){
-
-    //time_t time1 = clock()/CLOCKS_PER_SEC;	
-    //gROOT->ProcessLine(".x lhcbStyle.C");
 
     // Observables
     // Here we define the observable we are going to study with the code. In this case the observable is the mass of the D^0 + pion 
@@ -60,12 +55,6 @@ void scnsp(){
     //blinding
     // this string is used for "blinding", which means that the parameter of interest is modified in order not to have a bias while coding
     TString blindString = "SCNSP";
-    /*
-    if(file.contains("2017") || file.contains("2018") || file.contains("2017_2018")){
-        if(file.contains("KK")) blindString = "newDeltaACPRun3KK";
-        if(file.contains("pipi")) blindString = "newDeltaACPRun3pipi";
-    }
-    */
 
     // this line defines our parameter of interest and then defines a RooUnblindUniform object which blinds the parameter with an offset. this will only modify the value
     // of the parameter, not ist error
@@ -184,10 +173,6 @@ void scnsp(){
     RooGenericPdf * bkg_Dsm = new RooGenericPdf("bkg_Dm", "TMath::Power(@0-@1, 0.5) + @2*TMath::Power(@0-@1, 3/2) + @3*TMath::Power(@0-@1, 5/2)", 
                             RooArgList(m_D0pi, m0, am, bm)); // NB
 
-    /*
-    RooGenericPdf * bkgtagpdf = new RooGenericPdf("bkgtagpdf", "bkgtagpdf", "1+@0*@1/abs(@1)", RooArgSet(*A_CP_bkg, *q));
-    RooProdPdf * pdf_bkg = new RooProdPdf("pdf_bkg", "pdf_bkg", RooArgSet(*bkgtagpdf, *bkg_Dsp));
-    */
     // as for the signal events, the tagging function is defined also for the background 
     RooGenericPdf * tag_bkg_Dsp = new RooGenericPdf("tag_bkg_Dsp", "tag_bkg_Dsp", "@0==1", RooArgSet(*q));
     RooGenericPdf * tag_bkg_Dsm = new RooGenericPdf("tag_bkg_Dsm", "tag_bkg_Dsm", "@0==-1", RooArgSet(*q));
@@ -241,7 +226,7 @@ void scnsp(){
     RooFit::OwningPtr<RooFitResult> result = m1.save();
     result->Print("v");
 
-    // in theese lines a matrix object is defined and is filled with the correlation matrix given by the fit, it is thes printed 
+    // in theese lines a matrix object is defined and is filled with the correlation matrix given by the fit, it is then printed 
     const TMatrixDSym &cor = result->correlationMatrix();
     cout << "Correlation Matrix: " << endl;
     cor.Print();
@@ -249,7 +234,6 @@ void scnsp(){
     // this line tells the code to print the RooùargSet containing the fit parameter on a file.txt
     params->writeToFile("..path/to/file.txt..");    
     //correlation matrix 
-    //gStyle->SetOptStat(0);
     // this line create a 2 dimentsion histogram which is then filled with the correlation matrix of the fit exprted from the result
     TH2* hcorr = result->correlationHist();
 
@@ -266,7 +250,7 @@ void scnsp(){
     int ndof = nbin - npar;
 
     // the following lines print in output the means parameters with a specific precision and theis errors, useful beacus the result printed 
-    // from the fit in line 250 don't have  high enough precision 
+    // from the fit in line 235 don't have  high enough precision 
     cout << "mu1p: " << setprecision(10) << mu1p << "+-" << mu1p.getError() << endl;
     cout << "mu1m: " << setprecision(10) << mu1m << "+-" << mu1m.getError() << endl;
     cout << "mu2p: " << setprecision(10) << mu2p << "+-" << mu2p.getError() << endl;
@@ -276,65 +260,88 @@ void scnsp(){
     cout << "mug_p: " << setprecision(10) << mug_p << "+-" << mug_p.getError() << endl;
     cout << "mug_m: " << setprecision(10) << mug_m << "+-" << mug_m.getError() << endl;
 
-    
+    // the following lines defines two arrays, the first contains the values of the RooVar of the means while the second contains a list of char
     auto mu_arr = RooArgList(mu1m, mu1p, mu2m, mu2p, mu3m, mu3p, mug_m, mug_p);
     const char* mu_a[8] = {"mu1m", "mu1p", "mu2m", "mu2p", "mu3m", "mu3p", "mug_m", "mug_p"};
 
+    // this for loop defines a RooFormulaVar that subtract two elements of the first array and then prints in aoutput also the propagated error of the operation
     for(int i = 0; i <= 6; i=i+2){
         RooFormulaVar a("a", "@0 - @1", RooArgList(mu_arr[i], mu_arr[i+1]));
         cout << "Compatibilità (" << mu_a[i] << "-" << mu_a[i+1] << "): " << a.evaluate() << "+-" << a.getPropagatedError(*result) << endl;
     }
-    
 
-    //RooFormulaVar a("a", "@0 - @1", RooArgList(mu1m, mu1p));
-    //cout << "Compatibilità (" << mu1m << "-" << mu1p << "): " << a.evaluate() << "+-" << a.getPropagatedError(*result) << endl;
-
-    /*
+    // the folloquinf lines explicitate the recursive operstion  made in the RooAddPdf in order to compute the real fractions of the pdfs
     auto f2m = frac2m*(1.0 - frac1m);
     auto f3m = frac3m*(1.0 - frac1m)*(1.0 - frac2m);
     auto f2p = frac2p*(1.0 - frac1p);
     auto f3p = frac3p*(1.0 - frac1p)*(1.0 - frac2p);
-    */
-
-    //cout << "frac1m: " << frac1m << endl;
-    //cout << "frac2m: " << f2m << endl;
-    //cout << "frac3m: " << f3m << endl;
-    //cout << "frac1p: " << frac1p << endl;
-    //cout << "frac2p: " << f2p << endl;
-    //cout << "frac3p: " << f3p << endl;
     
-    // --- Plotting
+    // theese lines print in output the values of the real fractions of the pdf, useful to get an immediate idea of how the pdfs are distributed
+    cout << "frac1m: " << frac1m << endl;
+    cout << "frac2m: " << f2m << endl;
+    cout << "frac3m: " << f3m << endl;
+    cout << "frac1p: " << frac1p << endl;
+    cout << "frac2p: " << f2p << endl;
+    cout << "frac3p: " << f3p << endl;
 
-    // ----- 
+    
+    // ------ Plotting ------
+    // in this section all pdfs will be plotted, meaning that we will have a plot for the combined sign distribution, which is the one dostribution it will be made a fit of, 
+    // a plot for the D^*+ distribution and for the D^*- distribution. Each of theese will have its own pull distibution plot drawn underneath. Moreover, for each of theese distributions
+    // an additional log scale plot will be drawn since some effects at the extremes tìof the interval are noticible only with such a scale. Finally the covariant matrix 2 dimesional
+    // histogram will be drawn.
+    // The structure used for drawing a plot is the same for each of the distribution mentioned above, therefore only the first one will be discussed in ditailes 
+
+    // this line calls for the cration of a new TCanvas object, it will be the base the distribution will be drawn upon. The dimension is given now is of little importance 
+    // since onece printed it can be made bigger, here "800, 800" is given 
     TCanvas * roofit_c = new TCanvas("roofit_c", "roofit_c", 800, 800);
+    // this lines tells our program to change directory to the freshly created TCanvas, meaning that everithing created from now will be automatically drawn on the canvas, until
+    // it will be said otherwise
     roofit_c->cd();
+    // this line calls for the creation of a RooPlot object called frame, it is a container object in which will put all plottable pdfs and data. It will than be drawn 
+    // as a whole on the TCanvas
     RooPlot * plot_mass = m_D0pi.frame(Title("Combined signs"));
+    // the following lines give our code the order to put the data (hist) and the pdf, both components and the total, inside the frame 
+    // note that the order in which the components are called is importatn for the pullHist() function, see line 319
     hist->plotOn(plot_mass);
     pdf_tot->plotOn(plot_mass, Components("*pdf_bkg"), LineColor(kBlack), LineStyle(kDashed));
     pdf_tot->plotOn(plot_mass, Components("*pdf_sig"), LineColor(kRed));
     //pdf_tot->plotOn(plot_mass, Components("*jjm"), LineColor(kOrange));
     pdf_tot->plotOn(plot_mass, LineColor(kBlue));
+    // the following line acces the axis of the frame and set the title as we desire 
     plot_mass->GetXaxis()->SetTitle("#it{m}(#it{D}^{0}#it{#pi}) [MeV/c^{2}]");
     plot_mass->GetYaxis()->SetTitleOffset(1.65);
 
     //cout << "Chi^2/ndof: " << plot_mass->chiSquare() << endl;
     //cout << "Chi^2: " << chi2->getVal() << endl;
-
+    // this lines call for the cration of the RooHist object that contains the pull distribution of the pdf, since it is not specified which instogram and which pdf to use 
+    // in order to compute the pull distribution, the code will automatically use the last defined histogram and the last defined pdf
     RooHist * hpull = plot_mass->pullHist();
+    // this line calls for the creation of the frame that will contain the pull distribution
     RooPlot * pulls = m_D0pi.frame(Title("Pull Distribution"));
+    // this line adds the RooHist object to the frame object
     pulls->addPlotable(hpull, "BX");
 
+    // in order to have a cleaner output, the pull distribution is drawn under its respective pdf, meaning that in one TCanvaas there has to be two frames
+    // to specify to each frame how much space to take inside the TCanvas two TPad object are created. theese will create sections on the TCanvas 
+    // inside which the frames are said to be drawn 
     TPad * upPad = new TPad("upPad", "upPad", 0.005, 0.2525, 0.995, 0.995);
     TPad * lowPad = new TPad("lowPad", "lowPad", 0.005, 0.005, 0.995, 0.2475);
     lowPad->Draw();
     upPad->Draw();
+    // this line call for the code to change dorectory to the freshly created upPad 
     upPad->cd();
     upPad->SetLeftMargin(0.25);
     upPad->SetTopMargin(0.1);
     lowPad->SetLeftMargin(0.25);
+    
+    // this line compute the reduced chi^2 "by hand" using the RooChi2Var object value
     chi2_plot = chi2->getVal()/ndof;
+    // this line calls for the draw of the frame on the canvas 
     plot_mass->Draw();
 
+    // the following lines define TPaveText which is something that is drawn on top of the TCanvas indipendent from the frame objects. It will contain the value of the reduced chi^2 
+    // as well as the value of the chi^2 and the degrees of freedom, so that one wille have all the important informations by looking at the plot 
     TPaveText * box_chi2 = new TPaveText(0.7, 0.59, 0.9, 0.7, "NDCBR");
     box_chi2->SetFillColor(kWhite);
     box_chi2->SetTextSize(0.035);
@@ -343,16 +350,15 @@ void scnsp(){
     //box_chi2->AddText(plot_mass_plus->chiSquare());
     box_chi2->Draw("same");
 
+    // the following lines define a TLegend object containing the information for the pdfs and data drawn on the TCanvas
     TLegend * leg = new TLegend(0.6, 0.3, 0.89, 0.59);
-    //leg->SetTextFont(132);
-    //leg->SetTextSize(0.06);
-    //leg->SetBorderSize(0);
     leg->AddEntry(plot_mass->getObject(3), "Total PDF", "l");
     leg->AddEntry(plot_mass->getObject(2), "Signal", "l");
     leg->AddEntry(plot_mass->getObject(1), "Background", "l");
     leg->AddEntry(plot_mass->getObject(0), "data", "lep");
     leg->Draw("same");
 
+    // this line calls for the change directory in the lowPad 
     lowPad->cd();
     pulls->SetTitle("");
     pulls->GetXaxis()->SetLabelSize(0);
@@ -366,6 +372,7 @@ void scnsp(){
     pulls->Draw("B");
 
     // log scale 
+    // the following lines defines the same TCanvas and plot, whitout the TPave text and with the logaritmic scale, see line 381
     TCanvas * roofit_c_log = new TCanvas("roofit_c_log", "roofit_c_log", 800, 800);
     roofit_c_log->cd();
     
@@ -558,12 +565,14 @@ void scnsp(){
     hcorr->GetYaxis()->SetLabelSize(0.03);
     hcorr->Draw("colz");
     
-   
-    //roofit_c->SaveAs("plot_DACP3/moreplot/test_4_m.root");
+
+    // the following lines call for the save of the plots as files. If one possesses the extention, it is preferable to save only the linear scale plots as file.root
+    // so that one can change the scale of the y axis later
+    roofit_c->SaveAs("..path/to/file.root");
     //roofit_c_log->SaveAs("plot_DACP3/mass_plot_log_lst.pdf");
-    //roofit_plus->SaveAs("plot_DACP3/moreplot/test_4_plus.root");
+    roofit_plus->SaveAs("..path/to/file.root.root");
     //roofit_plus_log->SaveAs("plot_DACP3/moreplot/test_1_plus_log.pdf");
-    //roofit_minus->SaveAs("plot_DACP3/moreplot/test_4_minus.root");
+    roofit_minus->SaveAs("..path/to/file.root.root");
     //roofit_minus_log->SaveAs("plot_DACP3/mass_minus_log_lst.pdf");
    
 
