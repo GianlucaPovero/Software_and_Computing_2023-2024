@@ -47,14 +47,15 @@ void scnsp(){
     // Histograms
     // This lines opens a the file.root in which there are the histogram of events used for the data. At first the file is opened then the histograms are extracted and used to 
     // create the TH1D object. At last, the RooDataHist object is created using both TH1D and the tagging object q, preaviously defined
-    TFile * file = new TFile("..path..");
+    TFile * file = new TFile("..path/to/file.root");
     TH1D * h_dm_plus = (TH1D*)file->Get("h_dm_plus");
     TH1D * h_dm_minus = (TH1D*)file->Get("h_dm_minus");
     RooDataHist * hist = new RooDataHist("hist", "hist", m_D0pi, Index(*q), Import("Dsp", *h_dm_plus), Import("Dsm",*h_dm_minus));
 
     //blinding
     // this string is used for "blinding", which means that the parameter of interest is modified in order not to have a bias while coding
-    TString blindString = "SCNSP";
+    // in order for this line to work as intended, it must contain a string that is present in the path called when importing the histograms 
+    TString blindString = "..path...";
 
     // this line defines our parameter of interest and then defines a RooUnblindUniform object which blinds the parameter with an offset. this will only modify the value
     // of the parameter, not ist error
