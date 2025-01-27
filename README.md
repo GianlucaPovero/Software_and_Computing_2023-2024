@@ -1,7 +1,7 @@
 # Software and Computing project 2023/2024 #
 
 ## Pourpose ##
-This code was made to fit the distribution of the D<sup>***</sup> into KK.
+This code was made to fit the distribution of the D<sup>*</sup> into KK.
 Trying to do a simultaneous fit of the two possible dostributions D<sup>+</sup> and D<sup>-</sup> and then computing the chi<sup>2</sup>/n<dub>DoF</sub> of the combined fit.
 An example of histogram.root can be found in the repository and also an example of the results for both plots and logbook.
 
