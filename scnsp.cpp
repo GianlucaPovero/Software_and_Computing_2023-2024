@@ -65,7 +65,7 @@ void scnsp(){
     RooRealVar * A_CP_bkg = new RooRealVar("A_CP_bkg", "A_CP_bkg", -0.01, -1, 1);
 
 
-    // The following lines of code defines the functions used in the model, 3 Johnson functions and 1 Gaussian function. Note that theese definitions are made both for 
+    // The following lines of code defines the functions used in the model, 3 Johnson functions and 1 Gaussian function. Note that these definitions are made both for 
     // D^*+ distribution and D^*- distributions
     // Model : 3 Johnson functions D*+
     RooRealVar mu1p("mu1p", "mu1p", 2010.0, 2009, 2011);
@@ -135,7 +135,7 @@ void scnsp(){
     
 
     // Tagging function 
-    // theese lines define the tagging functions using the tagging variable "q". 
+    // these lines define the tagging functions using the tagging variable "q". 
     RooGenericPdf * tag_Dsp = new RooGenericPdf("tag_Dsp", "tag_Dsp", "@0==1", RooArgSet(*q));
     RooGenericPdf * tag_Dsm = new RooGenericPdf("tag_Dsm", "tag_Dsm", "@0==-1", RooArgSet(*q));
 
@@ -145,7 +145,7 @@ void scnsp(){
     RooProdPdf * pdf_Dsm = new RooProdPdf("pdf_Dsm", "pdf_Dsm", RooArgSet(*tag_Dsm, jjm));
 
     // A_CP fraction
-    // in order to define the whole signal model, plus and minus events must be added together but with the particular fraction defined in theese lines
+    // in order to define the whole signal model, plus and minus events must be added together but with the particular fraction defined in these lines
     RooFormulaVar * f_Dsp = new RooFormulaVar("f_Dsp", "f_Dsp", "0.5*(1+@0)", RooArgSet(*A_CP_blind));
     RooFormulaVar * f_Dsm = new RooFormulaVar("f_Dsm", "f_Dsm", "0.5*(1-@0)", RooArgSet(*A_CP_blind));
 
@@ -178,7 +178,7 @@ void scnsp(){
     RooGenericPdf * tag_bkg_Dsp = new RooGenericPdf("tag_bkg_Dsp", "tag_bkg_Dsp", "@0==1", RooArgSet(*q));
     RooGenericPdf * tag_bkg_Dsm = new RooGenericPdf("tag_bkg_Dsm", "tag_bkg_Dsm", "@0==-1", RooArgSet(*q));
 
-    // theese lines define the pdf for the background plus and minus events
+    // these lines define the pdf for the background plus and minus events
     RooProdPdf * pdf_bkg_Dsp = new RooProdPdf("pdf_bkg_Dsp", "pdf_bkg_Dsp", RooArgList(*tag_bkg_Dsp, *bkg_Dsp));
     RooProdPdf * pdf_bkg_Dsm = new RooProdPdf("pdf_bkg_Dsm", "pdf_bkg_Dsm", RooArgList(*tag_bkg_Dsm, *bkg_Dsm));
 
@@ -191,7 +191,7 @@ void scnsp(){
 
     // Total model 
     // onec the signal and the background pdf are written, the total model in defined as the sum of them with the expected number of events used as fractions.
-    // in theese lines the number of events is defined with an interval between 0 and 1e9 since we expect Nsig of the order of 1e6
+    // in these lines the number of events is defined with an interval between 0 and 1e9 since we expect Nsig of the order of 1e6
     RooRealVar * Nsig = new RooRealVar("Nsig", "Nsig", 1e6, 0, 1e9);
     RooRealVar * Nbkg = new RooRealVar("Nbkg", "Nbkg", 1e6, 0, 1e9);
     
@@ -208,7 +208,7 @@ void scnsp(){
     // Useful when one has to run the program multiple times 
     //params->readFromFile("..path/to/file.txt..");
 
-    // in theese following lines the RooChi2Var object is crated giving the total pdf and the histogram of data
+    // in these following lines the RooChi2Var object is crated giving the total pdf and the histogram of data
     bool extended = true;
     RooChi2Var * chi2 = new RooChi2Var("chi2", "chi2", *pdf_tot, *hist, extended, RooAbsData::SumW2);
 
@@ -216,18 +216,18 @@ void scnsp(){
     RooMinimizer m1(*chi2);
     //this line gives instruction to the program to print each computation on the logbook, this will result in a very rich logbook (and also very long)
     m1.setVerbose(kTRUE);
-    // theese lines apply the minimum gradient method, computing the asteroid vaues of the parameters, and the hessian matrix method, computing the parameters errors, upon 
+    // these lines apply the minimum gradient method, computing the asteroid vaues of the parameters, and the hessian matrix method, computing the parameters errors, upon 
     // the RooMinimizer object
     m1.migrad();
     m1.migrad();
     m1.hesse();
 
-    // theese lines defines an object RooFitResult extracted from the RooMinimizer and then print it. The "v" options tells the program to print also 
+    // these lines defines an object RooFitResult extracted from the RooMinimizer and then print it. The "v" options tells the program to print also 
     // the error matrix and the correlation
     RooFit::OwningPtr<RooFitResult> result = m1.save();
     result->Print("v");
 
-    // in theese lines a matrix object is defined and is filled with the correlation matrix given by the fit, it is then printed 
+    // in these lines a matrix object is defined and is filled with the correlation matrix given by the fit, it is then printed 
     const TMatrixDSym &cor = result->correlationMatrix();
     cout << "Correlation Matrix: " << endl;
     cor.Print();
@@ -277,7 +277,7 @@ void scnsp(){
     auto f2p = frac2p*(1.0 - frac1p);
     auto f3p = frac3p*(1.0 - frac1p)*(1.0 - frac2p);
     
-    // theese lines print in output the values of the real fractions of the pdf, useful to get an immediate idea of how the pdfs are distributed
+    // these lines print in output the values of the real fractions of the pdf, useful to get an immediate idea of how the pdfs are distributed
     cout << "frac1m: " << frac1m << endl;
     cout << "frac2m: " << f2m << endl;
     cout << "frac3m: " << f3m << endl;
@@ -288,7 +288,7 @@ void scnsp(){
     
     // ------ Plotting ------
     // in this section all pdfs will be plotted, meaning that we will have a plot for the combined sign distribution, which is the one dostribution it will be made a fit of, 
-    // a plot for the D^*+ distribution and for the D^*- distribution. Each of theese will have its own pull distibution plot drawn underneath. Moreover, for each of theese distributions
+    // a plot for the D^*+ distribution and for the D^*- distribution. Each of these will have its own pull distibution plot drawn underneath. Moreover, for each of these distributions
     // an additional log scale plot will be drawn since some effects at the extremes tìof the interval are noticible only with such a scale. Finally the covariant matrix 2 dimesional
     // histogram will be drawn.
     // The structure used for drawing a plot is the same for each of the distribution mentioned above, therefore only the first one will be discussed in ditailes 
@@ -324,7 +324,7 @@ void scnsp(){
     pulls->addPlotable(hpull, "BX");
 
     // in order to have a cleaner output, the pull distribution is drawn under its respective pdf, meaning that in one TCanvaas there has to be two frames
-    // to specify to each frame how much space to take inside the TCanvas two TPad object are created. theese will create sections on the TCanvas 
+    // to specify to each frame how much space to take inside the TCanvas two TPad object are created. these will create sections on the TCanvas 
     // inside which the frames are said to be drawn 
     TPad * upPad = new TPad("upPad", "upPad", 0.005, 0.2525, 0.995, 0.995);
     TPad * lowPad = new TPad("lowPad", "lowPad", 0.005, 0.005, 0.995, 0.2475);
