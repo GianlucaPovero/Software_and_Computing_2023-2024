@@ -15,9 +15,9 @@ In order to run the code it is suggested to go in the directory where the script
 printing the infromations about its current version and will outomatically lounch the script.
 
 ## Notes ##
-The code is not perfect and does not work s intended, meaning that the fit computed by the code does not converge perfectly. The rason for this behavior cabn be found 
-in the large statistics that this code is meant to analyze, reaching the order of the 10e6. 
+The code is not perfect and does not work as intended, meaning that the fit computed by the code does not converge perfectly. The rason for this behavior can be found 
+in the large statistics that this code is meant to analyze, reaching the order of the 10e6 events. 
 
-However unstable, the code reaches an accetable result in MIGRAD = 1 and HESSE = 1, meaning that although the values of the paraemters are non perfect and the minimum is not reaced precisely, the errors computed by the hessian matrix are good. 
+However unstable, the code reaches an accetable result in MIGRAD = 1 and HESSE = 1, meaning that although the values of the parameters are non perfect and the minimum is not reached precisely, the errors computed by the hessian matrix are good. 
 
-The example result in the repository has been found after two runs of the code.
+The example result in the repository has been found after two runs of the code. 
